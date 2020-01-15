@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Estudo Canvas</title>
+    <style>
+        .coteinerButton{
+            display: flex;
+            align-content: center;
+            width: 100%;
+        }
+        .coteinerButton #start{
+            width: 100px;
+            height: 40px;
+            border: none;
+            background-color: #0047d8;
+            color: #fff;
+            margin: 0 auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="900" height="700" style="margin: 0px auto; display: block;"></canvas>
+    <div class="coteinerButton"><button id="start">Iniciar</button></div>
+    <script type="module">
+
+    const startButtom = document.getElementById('start')
+    import createGame from "./js/game.js"
+    import createKeyboardListener from './js/keyboard-listener.js'
+    import renderScreen from "./js/render-screen.js"
+    const screen = document.getElementById("canvas");
+
+
+    const game = createGame()
+    const keyboardListener = createKeyboardListener(document)
+    
+
+    startButtom.addEventListener('click', ()=>{
+        if(game.state.status === 'start') return
+        game.start()
+
+        game.addPlayer(playerId => {
+        keyboardListener.registerPlayerId(playerId)
+        keyboardListener.subscribe(game.movePlayer)
+        })
+
+    })
+
+    renderScreen(screen, game, requestAnimationFrame)
+    </script>
+</body>
+</html>
