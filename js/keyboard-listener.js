@@ -30,7 +30,6 @@ export default function createKeyboardListener(document) {
         }
         notifyAll(command)
     }
-    console.log(state)
     return {
         subscribe,
         registerPlayerId

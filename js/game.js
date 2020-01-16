@@ -13,20 +13,20 @@ export default function createGame(){
 
     function start(){
         if(state.status !== 'stop') return
-        state.status = 'start'
-        const positions = {
-            left : [160,205,250,295],
-            right : [380,425,470,510]
-        }
-        let carId = 1
-        for (const position in positions) {
-            let key = position
-            positions[key].forEach(pos => {
-                createCar({ playerId: carId, y: pos, side: key})
-                carId++
-            });
-            
-        };
+            state.status = 'start'
+            const positions = {
+                left : [160,205,250,295],
+                right : [380,425,470,510]
+            }
+            let carId = 1
+            for (const position in positions) {
+                let key = position
+                positions[key].forEach(pos => {
+                    createCar({ playerId: carId, y: pos, side: key})
+                    carId++
+                });
+                
+            };
     }
     function subscribe(observerFunction) {
         observers.push(observerFunction)
@@ -65,6 +65,14 @@ export default function createGame(){
                 playerId: playerId
             })
        }
+    }
+    function loosePlayer(playerId){
+
+        removePlayer(playerId)
+        notifyAll({
+            type: 'loose-player',
+            playerId: playerId
+        })
     }
     function movePlayer(command) {
         notifyAll(command)
@@ -119,29 +127,41 @@ export default function createGame(){
     function moveCar(interval,command,callback){
 
         let position = (command.side === 'right') ? state.screen.width : 0
-        if(command.side === 'left'){
-                interval = setInterval(function(){
-                let limite = state.screen.width
-                if(position >= limite) {
-                    clearInterval(interval)
-                    callback(command)
-                }
-                state.cars[command.playerId] = {x: position, y: state.cars[command.playerId].y, side: state.cars[command.playerId].side}
-                checkForFruitCollision(command.playerId)
-                position = position+4
-                }, getRandomIntInclusive(8, 18) )
-        }else if(command.side === 'right'){
-                interval = setInterval(function(){
-                let limite = 0
-                if(position <= limite) {
-                    clearInterval(interval)
-                    callback(command)
-                }
-                state.cars[command.playerId] = {x: position, y: state.cars[command.playerId].y, side: state.cars[command.playerId].side} 
-                checkForFruitCollision(command.playerId)
-                position = position - 4
-                }, getRandomIntInclusive(8, 18) )
+        let limite = (command.side === 'right') ? 0 : state.screen.width
+
+        const sideCarr = {
+            left: () =>{
+                    if(position >= limite) {
+                        clearInterval(interval)
+                        callback(command)
+                    }
+                    state.cars[command.playerId] = {
+                        x: position,
+                        y: state.cars[command.playerId].y,
+                        side: state.cars[command.playerId].side
+                    }
+                    checkForFruitCollision(command.playerId)
+                    position = position+4
+            },
+            right: ()=>{
+                    if(position <= limite) {
+                        clearInterval(interval)
+                        callback(command)
+                    }
+                    state.cars[command.playerId] = {
+                        x: position,
+                        y: state.cars[command.playerId].y,
+                        side: state.cars[command.playerId].side
+                    } 
+                    checkForFruitCollision(command.playerId)
+                    position = position - 4
+            }
         }
+
+        interval = setInterval(function(){
+           sideCarr[command.side]()
+        }, getRandomIntInclusive(8, 18) )
+
     }
     function checkForFruitCollision(carId) {
         const car = state.cars[carId]
@@ -157,8 +177,8 @@ export default function createGame(){
             if(CarY >= player.y && car.y <= PlayerY && car.x >=  player.x && CarX <= PlayerX){
 
                 
-                removePlayer(playerId)
-                setState({status: 'perdeu'})
+                loosePlayer(playerId)
+                setState({status: 'loose'})
             }
             
         }
@@ -171,6 +191,7 @@ export default function createGame(){
     return {
         addPlayer,
         removePlayer,
+        loosePlayer,
         movePlayer,
         start,
         createCar,
